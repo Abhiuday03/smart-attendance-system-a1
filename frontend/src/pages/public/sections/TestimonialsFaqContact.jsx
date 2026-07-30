@@ -78,12 +78,12 @@ export function Contact() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
         <div>
           <p className="text-sm font-semibold text-primary">Contact</p>
-          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Bring AttendAI to your campus</h2>
+          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Bring FaceTrack to your campus</h2>
           <p className="mt-3 text-muted-foreground max-w-md">
             Tell us about your institution and we'll walk you through a pilot rollout for one department.
           </p>
           <div className="mt-8 space-y-4 text-sm">
-            <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-primary" /> hello@attendai.example</div>
+            <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-primary" /> hello@FaceTrack.example</div>
             <div className="flex items-center gap-3"><Phone className="h-4 w-4 text-primary" /> +91 40 2345 6789</div>
             <div className="flex items-center gap-3"><MapPin className="h-4 w-4 text-primary" /> Hitech City, Hyderabad, India</div>
           </div>

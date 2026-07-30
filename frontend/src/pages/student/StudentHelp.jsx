@@ -25,7 +25,7 @@ export default function StudentHelp() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground"><Mail className="h-5 w-5" /></div>
           <div className="flex-1">
             <p className="text-sm font-medium">Email us</p>
-            <p className="text-xs text-muted-foreground">support@attendai.example</p>
+            <p className="text-xs text-muted-foreground">support@FaceTrack.example</p>
           </div>
           <Button size="sm" variant="outline" onClick={() => toast.success('Opening mail client')}>Email</Button>
         </Card>

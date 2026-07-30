@@ -1,12 +1,21 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, User, Bell, Sparkles, LogOut, HelpCircle, Settings } from 'lucide-react'
+import {
+  LayoutDashboard, CalendarDays, Bell, Sparkles, LogOut,
+  HelpCircle,
+  Settings,
+  User,
+  Moon,
+  Sun,
+  ChevronDown,
+} from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { Avatar } from '@/components/ui/Misc'
 import { studentNotifications } from '@/mock/misc'
 import { toast } from 'sonner'
 import { cn } from '@/utils/cn'
-import { Moon, Sun } from 'lucide-react'
+import { useState } from "react";
+import { handleStudentLogoutApi } from '../services/api/auth/student/auth'
 
 const navItems = [
   { to: '/student/dashboard', label: 'Home', icon: LayoutDashboard },
@@ -18,13 +27,33 @@ const navItems = [
 export default function StudentLayout() {
   const { studentUser, logoutStudent } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const [openMenu, setOpenMenu] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate()
   const unread = studentNotifications.filter((n) => !n.read).length
 
-  const handleLogout = () => {
-    logoutStudent()
-    toast.success('Logged out successfully')
-    navigate('/student/login')
+  const handleLogout = async () => {
+    setIsLoading(true);
+    try {
+      const response = await handleStudentLogoutApi();
+      console.log("Respomse: ", response)
+      if (response.success) {
+        logoutStudent()
+        toast.success('Logged out successfully')
+        navigate('/student/login')
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+      </div>
+    );
   }
 
   return (
@@ -35,7 +64,7 @@ export default function StudentLayout() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Sparkles className="h-4.5 w-4.5" />
           </div>
-          <span className="font-display font-semibold">AttendAI</span>
+          <span className="font-display font-semibold">FaceTrack</span>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-2">
           {navItems.map((item) => (
@@ -84,7 +113,7 @@ export default function StudentLayout() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Sparkles className="h-4 w-4" />
             </div>
-            <span className="font-display font-semibold text-sm">AttendAI</span>
+            <span className="font-display font-semibold text-sm">FaceTrack</span>
           </div>
           <div className="hidden lg:block" />
           <div className="flex items-center gap-2">
@@ -95,9 +124,78 @@ export default function StudentLayout() {
               <Bell className="h-4.5 w-4.5" />
               {unread > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />}
             </NavLink>
-            <NavLink to="/student/profile">
-              <Avatar name={studentUser?.name} size={32} />
-            </NavLink>
+            <div className="relative">
+              <button
+                onClick={() => setOpenMenu(!openMenu)}
+                className="flex items-center gap-1 rounded-full p-1 hover:bg-muted transition"
+              >
+                <Avatar name={studentUser?.firstName} size={40} />
+                {/* <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" /> */}
+              </button>
+
+              {openMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setOpenMenu(false)}
+                  />
+
+                  <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+                    <NavLink
+                      to="/student/profile"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted"
+                      onClick={() => setOpenMenu(false)}
+                    >
+                      <User className="h-4 w-4" />
+                      Profile
+                    </NavLink>
+
+                    <NavLink
+                      to="/student/settings"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted"
+                      onClick={() => setOpenMenu(false)}
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </NavLink>
+
+                    <NavLink
+                      to="/student/help"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted"
+                      onClick={() => setOpenMenu(false)}
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                      Help
+                    </NavLink>
+
+                    {/* <button
+                      onClick={() => {
+                        toggleTheme();
+                        setOpenMenu(false);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-3 hover:bg-muted"
+                    >
+                      {theme === "dark" ? (
+                        <Sun className="h-4 w-4" />
+                      ) : (
+                        <Moon className="h-4 w-4" />
+                      )}
+                      {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                    </button> */}
+
+                    <div className="border-t" />
+
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-destructive hover:bg-destructive/10"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 

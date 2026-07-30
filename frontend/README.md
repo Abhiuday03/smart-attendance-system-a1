@@ -1,4 +1,4 @@
-# AttendAI — Smart Attendance Management System (Frontend)
+# FaceTrack — Smart Attendance Management System (Frontend)
 
 A frontend-only, static-data prototype for a face-recognition attendance system.
 **No backend, no real auth, no database** — everything runs on mock JSON in `src/mock/`,

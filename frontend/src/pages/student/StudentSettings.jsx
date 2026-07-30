@@ -5,9 +5,76 @@ import { Input, Label } from '@/components/ui/Input'
 import { useTheme } from '@/hooks/useTheme'
 import { Moon, Sun } from 'lucide-react'
 import { toast } from 'sonner'
+import { handleStudentChangePassword } from '../../services/api/auth/student/auth'
+import { useState } from 'react'
 
 export default function StudentSettings() {
   const { theme, toggleTheme } = useTheme()
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const validateForm = () => {
+    // Current Password
+    if (!currentPassword.trim()) {
+      toast.error("Current password is required");
+      return false;
+    }
+
+    // New Password
+    if (!newPassword.trim()) {
+      toast.error("New password is required");
+      return false;
+    }
+
+    if (newPassword.length < 8 || newPassword.length > 20) {
+      toast.error("New password must be between 8 and 20 characters");
+      return false;
+    }
+
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!]).{8,20}$/;
+
+    if (!passwordRegex.test(newPassword)) {
+      toast.error(
+        "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character."
+      );
+      return false;
+    }
+
+    if (currentPassword === newPassword) {
+      toast.error("New password must be different from the current password");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleChangePassword = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const data = {
+        oldPassword: currentPassword,
+        newPassword,
+      };
+
+      const response = await handleStudentChangePassword(data);
+      console.log("Response of Change Password: ", response)
+      if (response.success) {
+        toast.success(response.data.message || "Password updated successfully");
+
+        setCurrentPassword("");
+        setNewPassword("");
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div>
@@ -39,11 +106,42 @@ export default function StudentSettings() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Change password</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+        </CardHeader>
+
         <CardContent className="space-y-4 max-w-sm">
-          <div><Label htmlFor="current">Current password</Label><Input id="current" type="password" /></div>
-          <div><Label htmlFor="new">New password</Label><Input id="new" type="password" /></div>
-          <Button onClick={() => toast.success('Password updated')}>Update password</Button>
+
+          <div>
+            <Label htmlFor="currentPassword">Current Password</Label>
+            <Input
+              id="currentPassword"
+              type="password"
+              placeholder="Enter current password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="newPassword">New Password</Label>
+            <Input
+              id="newPassword"
+              type="password"
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </div>
+
+          <Button
+            onClick={handleChangePassword}
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? "Updating..." : "Update Password"}
+          </Button>
+
         </CardContent>
       </Card>
     </div>

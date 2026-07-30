@@ -9,6 +9,7 @@ import { Breadcrumb } from '@/components/ui/Controls'
 import { useTheme } from '@/hooks/useTheme'
 import { Moon, Sun, Monitor, Shield } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAuth } from '../../../hooks/useAuth'
 
 const roles = [
   { name: 'Super Admin', users: 2, permissions: 'Full access' },
@@ -18,10 +19,12 @@ const roles = [
 ]
 
 export default function AdminSettings() {
+  const { adminUser } = useAuth()
   const { theme, setTheme } = useTheme()
   const [threshold, setThreshold] = useState(75)
   const [confidence, setConfidence] = useState(85)
-
+  const institute = adminUser?.institute
+  console.log('institute  data in settings:', institute)
   return (
     <div className="space-y-5">
       <Breadcrumb items={[{ label: 'Dashboard', href: '/admin/dashboard' }, { label: 'Settings' }]} />
@@ -36,21 +39,21 @@ export default function AdminSettings() {
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="ai">AI Configuration</TabsTrigger>
+          {/* <TabsTrigger value="ai">AI Configuration</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="institution">
           <Card>
             <CardHeader><CardTitle>Institution profile</CardTitle></CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div><Label htmlFor="iname">Institution name</Label><Input id="iname" defaultValue="Nova Institute of Technology" /></div>
-              <div><Label htmlFor="code">Institution code</Label><Input id="code" defaultValue="NIT-2019" /></div>
-              <div><Label htmlFor="email">Contact email</Label><Input id="email" defaultValue="admin@university.edu" /></div>
-              <div><Label htmlFor="phone">Contact phone</Label><Input id="phone" defaultValue="+91 40 2345 6789" /></div>
-              <div className="sm:col-span-2"><Label htmlFor="addr">Address</Label><Input id="addr" defaultValue="Hitech City, Hyderabad, India" /></div>
-              <div className="sm:col-span-2 flex justify-end">
+              <div><Label htmlFor="iname">Institution name</Label><Input id="iname" defaultValue={institute?.name} /></div>
+              <div><Label htmlFor="code">Institution code</Label><Input id="code" defaultValue={institute?.instituteCode} /></div>
+              <div><Label htmlFor="email">Contact email</Label><Input id="email" defaultValue={institute?.email} /></div>
+              <div><Label htmlFor="phone">Contact phone</Label><Input id="phone" defaultValue={institute?.mobileNumber} /></div>
+              <div className="sm:col-span-2"><Label htmlFor="addr">Address</Label><Input id="addr" defaultValue={institute?.address} /></div>
+              {/* <div className="sm:col-span-2 flex justify-end">
                 <Button onClick={() => toast.success('Institution profile updated')}>Save changes</Button>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </TabsContent>
@@ -80,7 +83,7 @@ export default function AdminSettings() {
             <CardHeader><CardTitle>Theme</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-3 max-w-md">
-                {[{ v: 'light', icon: Sun, label: 'Light' }, { v: 'dark', icon: Moon, label: 'Dark' }, { v: 'system', icon: Monitor, label: 'System' }].map((opt) => (
+                {[{ v: 'light', icon: Sun, label: 'Light' }, { v: 'dark', icon: Moon, label: 'Dark' }].map((opt) => (
                   <button
                     key={opt.v}
                     onClick={() => setTheme(opt.v === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : opt.v)}
@@ -117,7 +120,7 @@ export default function AdminSettings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="ai">
+        {/* <TabsContent value="ai">
           <Card>
             <CardHeader><CardTitle>AI configuration</CardTitle></CardHeader>
             <CardContent className="space-y-6 max-w-lg">
@@ -140,7 +143,7 @@ export default function AdminSettings() {
               <Button onClick={() => toast.success('AI configuration saved')}>Save configuration</Button>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   )

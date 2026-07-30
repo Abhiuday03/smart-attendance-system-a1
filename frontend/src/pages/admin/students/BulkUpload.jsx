@@ -6,8 +6,8 @@ import { Progress } from '@/components/ui/Misc'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { StatusChip } from '@/components/ui/Badge'
 import { Breadcrumb } from '@/components/ui/Controls'
-import { bulkUploadHistory } from '@/mock/students'
 import { toast } from 'sonner'
+import { handleRegisterStudents } from '../../../services/api/auth/student/auth'
 
 const formats = [
   { label: 'CSV', ext: '.csv', icon: FileSpreadsheet },
@@ -21,36 +21,102 @@ export default function BulkUpload() {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [fileName, setFileName] = useState(null)
+  const [bulkUploadHistory, setBulkUploadHistory] = useState([]);
+  
+  const isValidExcelFile = (file) => {
+    const allowedTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
 
-  const simulateUpload = useCallback((name) => {
-    setFileName(name)
-    setUploading(true)
-    setProgress(0)
+    const allowedExtensions = [".xlsx", ".xls"];
+
+    const extension = file.name
+      .substring(file.name.lastIndexOf("."))
+      .toLowerCase();
+
+    return (
+      allowedExtensions.includes(extension) &&
+      allowedTypes.includes(file.type)
+    );
+  };
+
+  const uploadStudents = useCallback(async (file) => {
+    setFileName(file.name);
+    setUploading(true);
+    setProgress(0);
+
     const interval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) {
-          clearInterval(interval)
-          setUploading(false)
-          toast.success(`${name} processed — students extracted and registered`)
-          return 100
-        }
-        return p + 14
-      })
-    }, 250)
-  }, [])
+      setProgress((prev) => {
+        if (prev >= 90) return prev;
+        return prev + 10;
+      });
+    }, 600);
+
+    try {
+      const response = await handleRegisterStudents(file);
+      console.log("Bulk upload response:", response);
+      if (response.success) {
+        clearInterval(interval);
+        setProgress(100);
+        setBulkUploadHistory((prevHistory) => [response.data.fileDetails, ...prevHistory]);
+        toast.success(response.data.message);
+        setTimeout(() => {
+          setUploading(false);
+          setProgress(0);
+        }, 500);
+      }
+    } catch (error) {
+      clearInterval(interval);
+      setUploading(false);
+      setProgress(0);
+    }
+  }, []);
 
   const handleDrop = (e) => {
-    e.preventDefault()
-    setDragging(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file) simulateUpload(file.name)
-  }
+    e.preventDefault();
+    setDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+
+    if (!file) return;
+
+    if (!isValidExcelFile(file)) {
+      toast.error("Only Excel (.xlsx, .xls) files are allowed.");
+      return;
+    }
+
+    uploadStudents(file);
+  };
 
   const handleSelect = (e) => {
-    const file = e.target.files?.[0]
-    if (file) simulateUpload(file.name)
-  }
+    const file = e.target.files?.[0];
 
+    if (!file) return;
+
+    if (!isValidExcelFile(file)) {
+      toast.error("Only Excel (.xlsx, .xls) files are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    uploadStudents(file);
+  };
+
+  // Need to create API END POINT
+
+  // const fetchBulkUploadHistory = useCallback(async () => {
+  //   try {
+  //     const response = await handleFetchFileUploadHistory();
+  //     setBulkUploadHistory(response.data);
+  //   } catch (error) {
+  //     console.error('Error fetching bulk upload history:', error);
+  //   }
+  // }, []);
+
+  // useState(() => {
+  //   fetchBulkUploadHistory();
+  // }, [fetchBulkUploadHistory]);
   return (
     <div className="space-y-5">
       <Breadcrumb items={[{ label: 'Dashboard', href: '/admin/dashboard' }, { label: 'Students', href: '/admin/students' }, { label: 'Bulk upload' }]} />
@@ -66,19 +132,23 @@ export default function BulkUpload() {
               onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
-              className={`flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 text-center transition-colors ${
-                dragging ? 'border-primary bg-accent' : 'border-border'
-              }`}
+              className={`flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 text-center transition-colors ${dragging ? 'border-primary bg-accent' : 'border-border'
+                }`}
             >
               {!uploading && progress !== 100 && (
                 <>
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-foreground">
                     <UploadCloud className="h-7 w-7" />
                   </div>
-                  <p className="font-medium">Drag & drop your student sheet here</p>
+                  <p className="font-medium">Drag & drop your student Excel sheet here</p>
                   <p className="text-sm text-muted-foreground">or</p>
                   <label>
-                    <input type="file" accept=".csv,.xlsx,.xls,.pdf,.doc,.docx" className="hidden" onChange={handleSelect} />
+                    <input
+                      type="file"
+                      accept=".xlsx,.xls"
+                      className="hidden"
+                      onChange={handleSelect}
+                    />
                     <span className="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
                       Browse files
                     </span>
@@ -102,7 +172,7 @@ export default function BulkUpload() {
               )}
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {/* <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {formats.map((f) => (
                 <div key={f.label} className="flex flex-col items-center gap-1.5 rounded-xl border border-border p-3 text-center">
                   <f.icon className="h-5 w-5 text-primary" />
@@ -110,7 +180,7 @@ export default function BulkUpload() {
                   <p className="text-[10px] text-muted-foreground">{f.ext}</p>
                 </div>
               ))}
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
@@ -131,30 +201,30 @@ export default function BulkUpload() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader><CardTitle>Upload history</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <THead>
-              <TR><TH>File</TH><TH>Type</TH><TH>Uploaded</TH><TH>Rows</TH><TH>Registered</TH><TH>Failed</TH><TH>Status</TH></TR>
-            </THead>
-            <TBody>
-              {bulkUploadHistory.map((u) => (
-                <TR key={u.id}>
-                  <TD className="font-medium text-foreground">{u.fileName}</TD>
-                  <TD>{u.type}</TD>
-                  <TD className="text-xs text-muted-foreground">{u.uploadedOn}</TD>
-                  <TD>{u.totalRows}</TD>
-                  <TD className="text-success font-medium">{u.registered}</TD>
-                  <TD className="text-destructive font-medium">{u.failed}</TD>
-                  <TD><StatusChip status={u.status === 'completed' ? 'active' : 'pending'} label={u.status} /></TD>
-                </TR>
-              ))}
-            </TBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {bulkUploadHistory.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>Upload history</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <THead>
+                <TR><TH>File</TH><TH>Uploaded</TH><TH>Rows</TH><TH>Registered</TH><TH>Failed</TH><TH>Status</TH></TR>
+              </THead>
+              <TBody>
+                {bulkUploadHistory.map((u) => (
+                  <TR key={u.id}>
+                    <TD className="font-medium text-foreground">{u.fileName}</TD>
+                    <TD className="text-xs text-muted-foreground">{new Date(u.uploadedAt).toLocaleString("en-IN")}</TD>
+                    <TD>{u.totalRows}</TD>
+                    <TD className="text-success font-medium">{u.registeredRows}</TD>
+                    <TD className="text-destructive font-medium">{u.failedRows}</TD>
+                    <TD><StatusChip status={u.status === 'Completed' ? 'active' : 'pending'} label={u.status} /></TD>
+                  </TR>
+                ))}
+              </TBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

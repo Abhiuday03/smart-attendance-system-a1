@@ -9,6 +9,7 @@ import { AttendanceLineChart, DepartmentBarChart, StatusPieChart, AttendanceHeat
 import { dashboardStats, recentActivity } from '@/mock/misc'
 import { weeklyAttendanceTrend, departmentAttendance, attendanceHeatmap, attendanceSessions } from '@/mock/attendance'
 import { bulkUploadHistory } from '@/mock/students'
+import { useAuth } from '../../../hooks/useAuth'
 
 const statusPie = [
   { name: 'Present', value: dashboardStats.attendanceToday },
@@ -24,11 +25,12 @@ const quickActions = [
 ]
 
 export default function AdminDashboard() {
+  const { adminUser } = useAuth();
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Good morning, Admin</h1>
-        <p className="text-sm text-muted-foreground">Here's what's happening across Nova Institute of Technology today.</p>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">Good morning, {adminUser?.name || "Admin"}</h1>
+        <p className="text-sm text-muted-foreground">Here's what's happening across {adminUser?.institute.name || "institute"}.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">

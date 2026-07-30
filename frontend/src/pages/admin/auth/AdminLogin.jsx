@@ -6,24 +6,78 @@ import { Input, Label } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
+import { handleLoginAdmin } from '../../../services/api/auth/admin/auth'
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('admin@university.edu')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const { loginAdmin } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    // Email Validation
+    if (!email.trim()) {
+      toast.error("Admin email is required");
+      return false;
+    }
+
+    if (email.length > 100) {
+      toast.error("Email cannot exceed 100 characters");
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      toast.error("Invalid email format");
+      return false;
+    }
+
+    // Password Validation
+    if (!password.trim()) {
+      toast.error("Password is required");
+      return false;
+    }
+
+    if (password.length < 8 || password.length > 20) {
+      toast.error("Password must be between 8 and 20 characters");
+      return false;
+    }
+
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!]).{8,20}$/;
+
+    if (!passwordRegex.test(password)) {
+      toast.error(
+        "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character."
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!validateForm()) return;
     setLoading(true)
-    setTimeout(() => {
-      loginAdmin(email)
-      toast.success('Welcome back, Admin')
-      setLoading(false)
+    try {
+
+      const response = await handleLoginAdmin({ email, password })
+      console.log('Admin login response:', response)
+      const user = response.data.admin
+      // console.log('Admin user data:', user)
+      loginAdmin(user)
       navigate('/admin/dashboard')
-    }, 700)
+
+    } catch (error) {
+      console.error('Admin login error:', error)
+    }
+    finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -43,8 +97,21 @@ export default function AdminLogin() {
         <div>
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            <Link to="/admin/forgot-password" className="text-xs font-medium text-primary hover:underline">Forgot password?</Link>
-          </div>
+            <div className="flex flex-col items-end gap-1">
+              <Link
+                to="/admin/forgot-password"
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
+
+              <Link
+                to="/resend-verification"
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Didn't verify your email?
+              </Link>
+            </div></div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input id="password" type={showPassword ? 'text' : 'password'} required className="pl-9 pr-9" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />

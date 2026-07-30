@@ -1,4 +1,4 @@
-# AttendAI — Smart Attendance Management System
+# FaceTrack — Smart Attendance Management System
 ## Frontend Documentation
 
 Static-data, frontend-only prototype. No backend, no real auth, no database — see

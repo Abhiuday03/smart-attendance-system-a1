@@ -29,7 +29,7 @@ export default function AdminSidebar({ open, onClose }) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Sparkles className="h-4.5 w-4.5" />
             </div>
-            <span className="font-display font-semibold tracking-tight">AttendAI</span>
+            <span className="font-display font-semibold tracking-tight">FaceTrack</span>
           </div>
           <button className="rounded-md p-1 hover:bg-muted lg:hidden" onClick={onClose}>
             <X className="h-5 w-5" />
@@ -60,7 +60,7 @@ export default function AdminSidebar({ open, onClose }) {
         <div className="border-t border-border p-4">
           <div className="rounded-xl bg-muted p-3.5">
             <p className="text-xs font-semibold">AI Recognition Engine</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">v2.4 · 97.8% accuracy</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">v1.0 · 97.8% accuracy</p>
           </div>
         </div>
       </aside>

@@ -38,6 +38,12 @@ import StudentSettings from '@/pages/student/StudentSettings'
 import StudentHelp from '@/pages/student/StudentHelp'
 
 import NotFound from '@/pages/public/NotFound'
+import ResendVerification from '@/pages/shared/ResendVerification'
+import VerifyEmail from './pages/shared/VerifyEmail'
+import AdminLoggedInGaurd from './routes/AdminLoggedInGaurd'
+import StudentLoggedInGaurd from './routes/StudentLoggedInGaurd'
+import ChangeDefaultPassword from './pages/student/ChangeDefaultPassword'
+import StudentResetPassword from './pages/student/auth/StudentResetPassword'
 
 export default function App() {
   return (
@@ -47,17 +53,31 @@ export default function App() {
         <Route path="/" element={<Landing />} />
       </Route>
 
-      {/* Admin auth (public) */}
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin/signup" element={<AdminSignup />} />
-      <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
-      <Route path="/admin/otp" element={<AdminOtp />} />
-      <Route path="/admin/reset-password" element={<AdminResetPassword />} />
+      <Route element={<AdminLoggedInGaurd />}>
+        {/* Admin auth (public) */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/signup" element={<AdminSignup />} />
+        <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+        <Route path="/admin/otp" element={<AdminOtp />} />
+      </Route>
 
-      {/* Student auth (public) */}
-      <Route path="/student/login" element={<StudentLogin />} />
-      <Route path="/student/forgot-password" element={<StudentForgotPassword />} />
-      <Route path="/student/otp" element={<StudentOtp />} />
+      <Route path="/admin/reset-password" element={<AdminResetPassword />} />
+      {/* Shared  */}
+      <Route path="/resend-verification" element={<ResendVerification />} />
+      <Route path="/verify" element={<VerifyEmail />} />
+
+      <Route element={<StudentLoggedInGaurd />}>
+        {/* Student auth (public) */}
+        <Route path="/student/login" element={<StudentLogin />} />
+        <Route path="/student/forgot-password" element={<StudentForgotPassword />} />
+        <Route
+          path="/student/change-default-password"
+          element={<ChangeDefaultPassword />}
+        />
+        <Route path="/student/otp" element={<StudentOtp />} />
+
+      </Route>
+      <Route path="/student/reset-password" element={<StudentResetPassword />} />
 
       {/* Protected admin app */}
       <Route element={<AdminGuard />}>

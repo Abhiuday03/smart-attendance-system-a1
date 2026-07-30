@@ -18,10 +18,10 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <Avatar name={studentUser?.name} size={48} />
+        <Avatar name={studentUser?.firstName} size={48} />
         <div>
-          <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">Hi, {studentUser?.name?.split(' ')[0] || 'Student'} 👋</h1>
-          <p className="text-sm text-muted-foreground">{studentUser?.rollNumber} · CSE, 3rd Year</p>
+          <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">Hi, {studentUser?.firstName + " " + studentUser?.lastName || 'Student'} </h1>
+          <p className="text-sm text-muted-foreground">{studentUser?.rollNumber} · {studentUser?.courseName || 'AC'}, {studentUser?.batch || '2026'} </p>
         </div>
       </div>
 
@@ -44,14 +44,14 @@ export default function StudentDashboard() {
         </Card>
       </div>
 
-      <Card className="p-5">
+      {/* <Card className="p-5">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium">Profile completion</p>
           <span className="text-xs text-muted-foreground">92%</span>
         </div>
         <Progress value={92} className="mt-2" />
         <p className="mt-2 text-xs text-muted-foreground">Add your guardian's phone number to reach 100%.</p>
-      </Card>
+      </Card> */}
 
       <Card>
         <CardHeader className="flex-row items-center justify-between">

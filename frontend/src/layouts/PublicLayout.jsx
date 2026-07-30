@@ -26,7 +26,7 @@ export default function PublicLayout() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Sparkles className="h-4.5 w-4.5" />
             </div>
-            <span className="font-display text-lg font-semibold tracking-tight">AttendAI</span>
+            <span className="font-display text-lg font-semibold tracking-tight">FaceTrack</span>
           </Link>
 
           <nav className="hidden items-center gap-8 lg:flex">
@@ -77,7 +77,7 @@ export default function PublicLayout() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Sparkles className="h-4.5 w-4.5" />
                 </div>
-                <span className="font-display text-lg font-semibold">AttendAI</span>
+                <span className="font-display text-lg font-semibold">FaceTrack</span>
               </div>
               <p className="mt-3 text-sm text-muted-foreground max-w-xs">
                 Face-recognition attendance for classrooms that would rather spend time teaching.
@@ -107,7 +107,7 @@ export default function PublicLayout() {
             </div>
           </div>
           <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
-            <p>© 2026 AttendAI. Final year project — smart attendance using face recognition.</p>
+            <p>© 2026 FaceTrack. Final year project — smart attendance using face recognition.</p>
             <p>Built with React, Tailwind & a lot of mock data.</p>
           </div>
         </div>

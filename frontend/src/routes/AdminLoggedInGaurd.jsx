@@ -1,8 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 
-export default function AdminGuard() {
+export default function AdminLoggedInGaurd() {
   const { adminUser } = useAuth()
-  if (!adminUser) return <Navigate to="/admin/login" replace />
+  if (adminUser) return <Navigate to="/admin/dashboard" replace />
   return <Outlet />
 }
