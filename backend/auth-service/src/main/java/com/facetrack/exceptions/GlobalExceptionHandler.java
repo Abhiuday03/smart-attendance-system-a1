@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(error);
     }
 

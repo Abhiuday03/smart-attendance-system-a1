@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import com.facetrack.dao.AdminDaoRepository;
+import com.facetrack.dao.ForgotPasswordOTPDaoRepository;
 import com.facetrack.dao.InstituteDaoRepository;
 import com.facetrack.dao.RefreshTokenDaoRepository;
 import com.facetrack.dao.ResetPasswordTokenDaoRepository;
@@ -25,6 +26,8 @@ import com.facetrack.dto.request.ForgotPasswordRequest;
 import com.facetrack.dto.request.LoginRequest;
 import com.facetrack.dto.request.RegisterAdminAndInstituteRequest;
 import com.facetrack.dto.request.ResendVerificationMailRequest;
+import com.facetrack.dto.request.UpdatePasswordRequest;
+import com.facetrack.dto.request.VerifyOtpRequest;
 import com.facetrack.dto.request.VerifyResetPasswordRequest;
 import com.facetrack.dto.response.AdminLoginResponse;
 import com.facetrack.dto.response.ApiResponse;
@@ -32,19 +35,24 @@ import com.facetrack.dto.response.EmailVerificationResponse;
 import com.facetrack.dto.response.ForgotPasswordResponse;
 import com.facetrack.dto.response.InstituteResponse;
 import com.facetrack.dto.response.LoginResponse;
+import com.facetrack.dto.response.LogoutAdminResponse;
 import com.facetrack.dto.response.RefreshTokenResponse;
 import com.facetrack.dto.response.RegisterAdminAndInstituteResponse;
 import com.facetrack.dto.response.ResendVerificationMailResponse;
+import com.facetrack.dto.response.UpdatePasswordResponse;
+import com.facetrack.dto.response.VerifyOtpResponse;
 import com.facetrack.dto.response.VerifyResetPasswordResponse;
 import com.facetrack.exceptions.DuplicateResourceException;
 import com.facetrack.exceptions.UnauthorizedException;
 import com.facetrack.helpers.EmailHelpers;
 import com.facetrack.models.Admin;
 import com.facetrack.models.Institute;
+import com.facetrack.models.redis.ForgotPasswordOTP;
 import com.facetrack.models.redis.RefreshToken;
 import com.facetrack.models.redis.ResetPasswordToken;
 import com.facetrack.models.redis.VerificationToken;
 import com.facetrack.util.HashUtil;
+import com.facetrack.util.TokenUtil;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,11 +74,15 @@ public class AdminService {
 	@Autowired
 	private RefreshTokenDaoRepository refreshTokenDAO;
 	@Autowired
+	private ForgotPasswordOTPDaoRepository forgotPasswordOtpDAO;
+	@Autowired
 	private EmailHelpers mailSender;
 	@Autowired
 	private JwtService jwtService;
-//	@Autowired
-//	private BCryptPasswordEncoder passwordEncoder;
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+
+	private static final TokenUtil tokenUtil = new TokenUtil();
 
 	@Value("${jwt.access-token-expiration}")
 	private long accessTokenExpiration;
@@ -108,8 +120,8 @@ public class AdminService {
 		admin.setName(adminAndInstitute.superAdmin().name());
 		admin.setEmail(adminAndInstitute.superAdmin().email());
 
-		// Create an encoder with strength 7 
-		//need to use DI object
+		// Create an encoder with strength 7
+		// need to use DI object
 		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(7);
 		String hashedPassword = encoder.encode(adminAndInstitute.superAdmin().password());
 
@@ -119,7 +131,7 @@ public class AdminService {
 		Admin responseAdmin = adminDAO.save(admin);
 		if (responseInstitute != null && responseAdmin != null) {
 
-			VerificationToken tokenObj = new VerificationToken(mailSender.getToken(), responseAdmin.getEmail(),
+			VerificationToken tokenObj = new VerificationToken(tokenUtil.getToken(), responseAdmin.getEmail(),
 					Instant.now());
 			VerificationToken responseTokenObj = verificationTokenDAO.save(tokenObj);
 
@@ -222,7 +234,7 @@ public class AdminService {
 						new ResendVerificationMailResponse("Email Already Verified, Please Login.")));
 			}
 
-			VerificationToken tokenObj = new VerificationToken(mailSender.getToken(), email, Instant.now());
+			VerificationToken tokenObj = new VerificationToken(tokenUtil.getToken(), email, Instant.now());
 			VerificationToken responseTokenObj = verificationTokenDAO.save(tokenObj);
 
 			if (responseTokenObj != null) {
@@ -237,7 +249,7 @@ public class AdminService {
 
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false,
-				new ResendVerificationMailResponse("Unable To Send Email, Please Try Again Later.")));
+				new ResendVerificationMailResponse("Email Not Found, Please Try Again With Valid Email.")));
 	}
 
 	public ResponseEntity<ApiResponse<LoginResponse>> adminLogin(@Valid LoginRequest loginData) {
@@ -356,16 +368,16 @@ public class AdminService {
 		if (adminObj.isPresent()) {
 			Admin admin = adminObj.get();
 			refreshTokenDAO.deleteById(email);
-			String resetToken = mailSender.getToken();
-			ResetPasswordToken tokenObj = new ResetPasswordToken(resetToken, email, Instant.now());
-			resetPasswordTokenDao.save(tokenObj);
+			String OTP = tokenUtil.getOTP();
+			System.out.println("Generated OTP: " + OTP);
+			ForgotPasswordOTP otpObj = new ForgotPasswordOTP(OTP, email, Instant.now());
+			forgotPasswordOtpDAO.save(otpObj);
 
-			String token = resetToken;
-			String mailResp = mailSender.sendResetPasswordEmail(admin.getEmail(), admin.getName(), token);
-			System.out.println("Reset Email response: " + mailResp);
+			String mailResp = mailSender.sendForgotPasswordOtpEmail(admin.getEmail(), admin.getName(), OTP);
+			System.out.println("OTP Email response: " + mailResp);
 
-			return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, new ForgotPasswordResponse(
-					"Password reset link has been sent successfully. Please check your email.")));
+			return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true,
+					new ForgotPasswordResponse("OTP has been sent successfully. Please check your email.")));
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
 				new ApiResponse<>(false, new ForgotPasswordResponse("No account found with this email address.")));
@@ -376,8 +388,6 @@ public class AdminService {
 		String email = verifyResetPasswordRequest.email();
 		String password = verifyResetPasswordRequest.password();
 		String token = verifyResetPasswordRequest.token();
-
-		
 
 		Optional<ResetPasswordToken> responseTokenObj = resetPasswordTokenDao.findById(token);
 
@@ -392,10 +402,10 @@ public class AdminService {
 
 				admin.setPassword(hashedPassword);
 				adminDAO.save(admin);
-				
+
 				resetPasswordTokenDao.deleteById(token);
 				refreshTokenDAO.deleteById(email);
-				
+
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(new ApiResponse<>(true, new VerifyResetPasswordResponse("Password Reset Successful")));
 			}
@@ -403,6 +413,88 @@ public class AdminService {
 
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 				.body(new ApiResponse<>(false, new VerifyResetPasswordResponse("Please Generate New Reset Link.")));
+	}
+
+	public ResponseEntity<ApiResponse<LogoutAdminResponse>> logout(HttpServletRequest request) {
+
+		Cookie[] cookies = request.getCookies();
+
+		if (cookies != null) {
+			String refreshToken = null;
+
+			for (Cookie cookie : cookies) {
+				if ("refreshToken".equals(cookie.getName())) {
+					refreshToken = cookie.getValue();
+					break;
+				}
+			}
+
+			if (refreshToken != null && !refreshToken.isBlank()) {
+				try {
+					String email = jwtService.extractEmail(refreshToken);
+					refreshTokenDAO.deleteById(email);
+				} catch (Exception ex) {
+					System.out.println(ex);
+				}
+			}
+		}
+
+		ResponseCookie accessCookie = ResponseCookie.from("accessToken", "").httpOnly(true).secure(true)
+				.sameSite("Strict").path("/").maxAge(Duration.ZERO).build();
+
+		ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "").httpOnly(true).secure(true)
+				.sameSite("Strict").path("/auth").maxAge(Duration.ZERO).build();
+
+		return ResponseEntity.status(HttpStatus.OK).header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+				.header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+				.body(new ApiResponse<>(true, new LogoutAdminResponse("Logout successful.")));
+	}
+
+	public ResponseEntity<ApiResponse<VerifyOtpResponse>> verifyOtp(@Valid VerifyOtpRequest verifyOtpRequest) {
+		String email = verifyOtpRequest.email();
+		String otp = verifyOtpRequest.OTP();
+		Optional<ForgotPasswordOTP> otpObj = forgotPasswordOtpDAO.findById(otp);
+		if (otpObj.isPresent()) {
+			ForgotPasswordOTP repsonseOtp = otpObj.get();
+			if (repsonseOtp.getUserId().equals(email)) {
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(new ApiResponse<>(true, new VerifyOtpResponse("OTP Verified.", otp)));
+			}
+		}
+		return ResponseEntity.status(HttpStatus.NOT_FOUND)
+				.body(new ApiResponse<>(true, new VerifyOtpResponse("Invalid OTP.", "")));
+
+	}
+
+	public ResponseEntity<ApiResponse<UpdatePasswordResponse>> updatePassword(
+			@Valid UpdatePasswordRequest updatePasswordRequest) {
+		String email = updatePasswordRequest.email();
+		String otp = updatePasswordRequest.OTP();
+		String password = updatePasswordRequest.password();
+		Optional<ForgotPasswordOTP> otpObj = forgotPasswordOtpDAO.findById(otp);
+		if (otpObj.isPresent()) {
+			ForgotPasswordOTP responseOtp = otpObj.get();
+			if (responseOtp.getUserId().equals(email)) {
+				Optional<Admin> adminObj = adminDAO.findByEmail(email);
+				if (adminObj.isPresent()) {
+					Admin admin = adminObj.get();
+					if (passwordEncoder.matches(password, admin.getPassword())) {
+						return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+								.body(new ApiResponse<>(false,new UpdatePasswordResponse("New password cannot be the same as the old password.")));
+					}
+					String hashedPassword = passwordEncoder.encode(password);
+
+					admin.setPassword(hashedPassword);
+					adminDAO.save(admin);
+					forgotPasswordOtpDAO.deleteById(otp);
+					return ResponseEntity.status(HttpStatus.OK)
+							.body(new ApiResponse<>(true, new UpdatePasswordResponse("Password Updation Successful.")));
+				}
+			}
+		}
+
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(new ApiResponse<>(false, new UpdatePasswordResponse("Invalid or expired OTP.")));
 	}
 
 }

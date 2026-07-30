@@ -1,7 +1,5 @@
 package com.facetrack.helpers;
 
-import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +11,7 @@ public class EmailHelpers {
 
 	@Autowired
 	private EmailService emailService;
+
 
 	@Value("${clientUrl}")
 	private String url;
@@ -102,7 +101,58 @@ public class EmailHelpers {
 		return emailService.sendHtmlEmail(toEmail, subject, body);
 	}
 
-	public String getToken() {
-		return UUID.randomUUID().toString();
+	public String sendForgotPasswordOtpEmail(String toEmail, String user, String otp) {
+
+		String subject = "Your Password Reset OTP - Smart Attendance [ FACETRACK ]";
+
+		String body = """
+				<!DOCTYPE html>
+				<html>
+				<body style="font-family:Arial,sans-serif;color:#333;line-height:1.6;">
+
+				    <p>Hi %s,</p>
+
+				    <p>We received a request to reset the password for your <strong>FaceTrack</strong> account.</p>
+
+				    <p>Please use the following One-Time Password (OTP) to reset your password:</p>
+
+				    <div style="
+				        text-align:center;
+				        margin:30px 0;
+				        ">
+				        <span style="
+				            display:inline-block;
+				            font-size:32px;
+				            font-weight:bold;
+				            letter-spacing:8px;
+				            background:#f3f4f6;
+				            color:#dc2626;
+				            padding:16px 30px;
+				            border-radius:8px;
+				            border:2px dashed #dc2626;
+				        ">
+				            %s
+				        </span>
+				    </div>
+
+				    <p><strong>This OTP is valid for 5 minutes.</strong></p>
+
+				    <p>Do not share this OTP with anyone. FaceTrack will never ask you for your OTP via phone, email, or message.</p>
+
+				    <p>If you did not request a password reset, you can safely ignore this email. Your account remains secure.</p>
+
+				    <hr style="border:none;border-top:1px solid #e5e5e5;margin:30px 0;">
+
+				    <p>Regards,<br>
+				    <strong>FaceTrack Team</strong></p>
+
+				</body>
+				</html>
+				"""
+				.formatted(user, otp);
+
+		return emailService.sendHtmlEmail(toEmail, subject, body);
 	}
+
+
 }

@@ -1,5 +1,5 @@
 package com.facetrack.dto.response;
 
-public record ResendVerificationMailResponse(String meassage) {
+public record ResendVerificationMailResponse(String message) {
 
 }

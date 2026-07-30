@@ -20,7 +20,10 @@ public class Student extends BaseEntity {
 	private String rollNumber;
 
 	@Column(nullable = false, length = 100)
-	private String name;
+	private String firstName;
+
+	@Column(nullable = false, length = 100)
+	private String lastName;
 
 	@Column(nullable = false, unique = true, length = 150)
 	private String email;
@@ -38,7 +41,7 @@ public class Student extends BaseEntity {
 
 	@Column(nullable = false, length = 7)
 	private String batch;
-	
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "course_id", nullable = false)
 	private Course course;
@@ -50,27 +53,32 @@ public class Student extends BaseEntity {
 	private boolean hasEmbeddings = false;
 
 	@Column(nullable = false)
-	private boolean isPasswordUpdated=false;
+	private boolean isPasswordUpdated = false;
+
+	@Column(nullable = false)
+	private int loginCount = 0;
 
 	@Column(nullable = false, length = 100)
 	private String parentName;
 
-	@Column(nullable = false,length = 15)
+	@Column(nullable = false, length = 15)
 	private String parentMobileNumber;
 
-	@Column(nullable = false,length = 150)
+	@Column(nullable = false, length = 150)
 	private String parentEmail;
 
 	public Student() {
 		super();
 	}
 
-	public Student(String rollNumber, String name, String email, String password, Role role, Institute institute,
-			String batch, Course course, String section, boolean hasEmbeddings, boolean isPasswordUpdated,
-			String parentName, String parentMobileNumber, String parentEmail) {
+	public Student(String rollNumber, String firstName, String lastName, String email, String password, Role role,
+			Institute institute, String batch, Course course, String section, boolean hasEmbeddings,
+			boolean isPasswordUpdated, int loginCount, String parentName, String parentMobileNumber,
+			String parentEmail) {
 		super();
 		this.rollNumber = rollNumber;
-		this.name = name;
+		this.firstName = firstName;
+		this.lastName = lastName;
 		this.email = email;
 		this.password = password;
 		this.role = role;
@@ -80,6 +88,7 @@ public class Student extends BaseEntity {
 		this.section = section;
 		this.hasEmbeddings = hasEmbeddings;
 		this.isPasswordUpdated = isPasswordUpdated;
+		this.loginCount = loginCount;
 		this.parentName = parentName;
 		this.parentMobileNumber = parentMobileNumber;
 		this.parentEmail = parentEmail;
@@ -89,16 +98,32 @@ public class Student extends BaseEntity {
 		return rollNumber;
 	}
 
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public int getLoginCount() {
+		return loginCount;
+	}
+
+	public void setLoginCount(int loginCount) {
+		this.loginCount = loginCount;
+	}
+
 	public void setRollNumber(String rollNumber) {
 		this.rollNumber = rollNumber;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getEmail() {
@@ -165,7 +190,7 @@ public class Student extends BaseEntity {
 		this.hasEmbeddings = hasEmbeddings;
 	}
 
-	public boolean isPasswordUpdated() {
+	public boolean getIsPasswordUpdated() {
 		return isPasswordUpdated;
 	}
 
@@ -196,6 +221,14 @@ public class Student extends BaseEntity {
 	public void setParentEmail(String parentEmail) {
 		this.parentEmail = parentEmail;
 	}
-	
-	
+
+	@Override
+	public String toString() {
+		return "Student [rollNumber=" + rollNumber + ", firstName=" + firstName + ", lastName=" + lastName + ", email="
+				+ email + ", password=" + password + ", role=" + role + ", institute=" + institute + ", batch=" + batch
+				+ ", course=" + course + ", section=" + section + ", hasEmbeddings=" + hasEmbeddings
+				+ ", isPasswordUpdated=" + isPasswordUpdated + ", loginCount=" + loginCount + ", parentName="
+				+ parentName + ", parentMobileNumber=" + parentMobileNumber + ", parentEmail=" + parentEmail + "]";
+	}
+
 }
