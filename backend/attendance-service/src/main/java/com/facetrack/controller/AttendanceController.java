@@ -1,10 +1,12 @@
 package com.facetrack.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.facetrack.dto.AttendanceSummary;
 import com.facetrack.entity.Attendance;
 import com.facetrack.service.AttendanceService;
 
@@ -52,5 +54,28 @@ public class AttendanceController {
         attendanceService.deleteAttendance(id);
 
         return ResponseEntity.ok("Attendance deleted successfully");
+    }
+    //GET - Attendance
+    @GetMapping("/student/{studentId}")
+    public List<Attendance> getAttendanceByStudentId(
+            @PathVariable Long studentId) {
+
+        return attendanceService.getAttendanceByStudentId(studentId);
+    }
+    
+ // Get attendance summary by student ID
+    @GetMapping("/student/{studentId}/summary")
+    public AttendanceSummary getAttendanceSummary(
+            @PathVariable Long studentId) {
+
+        return attendanceService.getAttendanceSummary(studentId);
+    }
+    
+ // Get attendance by date
+    @GetMapping("/date/{date}")
+    public List<Attendance> getAttendanceByDate(
+            @PathVariable LocalDate date) {
+
+        return attendanceService.getAttendanceByDate(date);
     }
 }
